@@ -40,7 +40,7 @@ def generate_data_description(save_dir, reorder):
     test_image_name = [mivia_data['test_images_name'][i][0][0] for i in range(size_dataset['test_images_name'][0])]
     dataset.image_name = train_image_name + val_image_name + test_image_name
     dataset.label = np.concatenate((mivia_data['train_label'], mivia_data['val_label'], mivia_data['test_label']), axis=0) #controllare axis=0
-    dataset.attr_name = [mivia_data['attributes'][i][0][0] for i in range(25)]
+    dataset.attr_name = [mivia_data['attributes'][i][0][0] for i in range(size_dataset['attributes'][0])]
 
    # if reorder:
    #     dataset.label = dataset.label[:, np.array(group_order)]
@@ -50,7 +50,7 @@ def generate_data_description(save_dir, reorder):
     size_testval = size_dataset['test_images_name'][0] + size_dataset['test_images_name'][0]
 
     dataset.partition = EasyDict()
-    dataset.partition.train = np.arange(0, size_dataset['train_images_name'][0]-1)  # np.array(range(80000))
+    dataset.partition.train = np.arange(0, size_dataset['train_images_name'][0])  # np.array(range(80000))
     dataset.partition.val = np.arange(size_dataset['train_images_name'][0], size_trainval)  # np.array(range(80000, 90000))
     dataset.partition.test = np.arange(size_trainval, size_testval)  # np.array(range(90000, 100000))
     dataset.partition.trainval = np.arange(0,size_trainval)  # np.array(range(90000))
