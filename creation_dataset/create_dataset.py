@@ -3,6 +3,7 @@ import os
 import pandas as pd
 import numpy as np
 import scipy
+import json
 
 
 def nan_index(df):
@@ -97,6 +98,20 @@ if __name__ == '__main__':
             'val_images_name': images_name_val,
             'val_label': val_label
             }
+
+    size_data = {
+        'attributes': attributes.shape,
+        'test_images_name': images_name_test.shape,
+        'test_label': test_label.shape,
+        'train_images_name': images_name_train.shape,
+        'train_label': train_label.shape,
+        'val_images_name': images_name_val.shape,
+        'val_label': val_label.shape
+    }
+    json_file = f"{path}/size_dataset.json"
+
+    with open(json_file, 'w') as output:
+        json.dump(size_data, output, indent=4)
 
     outfile = os.path.join(path, "annotation_fixed_prova.mat")
     scipy.io.savemat(outfile, data)
