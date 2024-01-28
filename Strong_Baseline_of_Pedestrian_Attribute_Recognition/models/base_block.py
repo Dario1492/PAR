@@ -49,10 +49,10 @@ class FeatClassifier(nn.Module):
         return params
 
     def finetune_params(self):
-        for param in backone.parameters():
+        for param in self.backone.parameters():
             param.requires_grad = False
 
-        for param in backbone.features[-2:].parameters():
+        for param in self.backbone.features[-2:].parameters():
             param.requires_grad = True
         return self.backbone.parameters()
 
