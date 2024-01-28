@@ -9,7 +9,7 @@ def make_dir(path):
         pass
     else:
         os.mkdir(path)
-group_order = [4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,1,2,3]
+group_order = [3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,1,2]
 def generate_data_description(save_dir, reorder):
     """
     create a dataset description file, which consists of images, labels
