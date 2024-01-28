@@ -4,3 +4,4 @@ creation_dataset/*.csv
 *.pt
 Strong_Baseline_of_Pedestrian_Attribute_Recognition/.DS_Store
 Strong_Baseline_of_Pedestrian_Attribute_Recognition/dataset/.DS_Store
+tracking/video/*
