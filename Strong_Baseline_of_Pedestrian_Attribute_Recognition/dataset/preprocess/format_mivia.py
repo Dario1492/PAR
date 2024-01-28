@@ -1,4 +1,4 @@
-import os
+import os, json
 import pickle
 import numpy as np
 from easydict import EasyDict
@@ -9,7 +9,18 @@ def make_dir(path):
         pass
     else:
         os.mkdir(path)
+
 group_order = [3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,1,2]
+
+def read_json() -> dict:
+
+    filename = "../creation_dataset/size_dataset.json"
+    try:
+        with open(filename, 'r') as f:
+            return json.load(f)
+
+    except Exception as e:
+        print("error during loading json file")
 
 def generate_data_description(save_dir, reorder):
     """
@@ -20,9 +31,13 @@ def generate_data_description(save_dir, reorder):
     dataset.description = 'mivia'
     dataset.reorder = 'group_order' #forse non serve
     dataset.root = os.path.join(save_dir, 'data')
-    train_image_name = [mivia_data['train_images_name'][i][0][0] for i in range(93082)] #da contrallare se vi vuole il for
-    val_image_name = [mivia_data['val_images_name'][i][0][0] for i in range(8513)]
-    test_image_name = [mivia_data['test_images_name'][i][0][0] for i in range(3649)]
+
+    size_dataset = read_json()
+
+
+    train_image_name = [mivia_data['train_images_name'][i][0][0] for i in range(size_dataset['train_images_name'][0])] #da contrallare se vi vuole il for
+    val_image_name = [mivia_data['val_images_name'][i][0][0] for i in range(size_dataset['val_images_name'][0])]
+    test_image_name = [mivia_data['test_images_name'][i][0][0] for i in range(size_dataset['test_images_name'][0])]
     dataset.image_name = train_image_name + val_image_name + test_image_name
     dataset.label = np.concatenate((mivia_data['train_label'], mivia_data['val_label'], mivia_data['test_label']), axis=0) #controllare axis=0
     dataset.attr_name = [mivia_data['attributes'][i][0][0] for i in range(25)]
@@ -31,11 +46,14 @@ def generate_data_description(save_dir, reorder):
    #     dataset.label = dataset.label[:, np.array(group_order)]
    #     dataset.attr_name = [dataset.attr_name[i] for i in group_order]
 
+    size_trainval = size_dataset['train_images_name'][0] + size_dataset['val_images_name'][0]
+    size_testval = size_dataset['test_images_name'][0] + size_dataset['test_images_name'][0]
+
     dataset.partition = EasyDict()
-    dataset.partition.train = np.arange(0, 93081)  # np.array(range(80000))
-    dataset.partition.val = np.arange(93081, 101594)  # np.array(range(80000, 90000))
-    dataset.partition.test = np.arange(101594, 105243)  # np.array(range(90000, 100000))
-    dataset.partition.trainval = np.arange(0,101594)  # np.array(range(90000))
+    dataset.partition.train = np.arange(0, size_dataset['train_images_name'][0]-1)  # np.array(range(80000))
+    dataset.partition.val = np.arange(size_dataset['train_images_name'][0], size_trainval)  # np.array(range(80000, 90000))
+    dataset.partition.test = np.arange(size_trainval, size_testval)  # np.array(range(90000, 100000))
+    dataset.partition.trainval = np.arange(0,size_trainval)  # np.array(range(90000))
     dataset.weight_train = np.mean(dataset.label[dataset.partition.train], axis=0).astype(np.float32)
     dataset.weight_trainval = np.mean(dataset.label[dataset.partition.trainval], axis=0).astype(np.float32)
 
