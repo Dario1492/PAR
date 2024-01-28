@@ -1,86 +1,102 @@
+import os
+
 import pandas as pd
 import numpy as np
 import scipy
 
+
 def nan_index(df):
     df_nan_upp = df.loc[df['upper_-1'] == True]
-
     df_nan_low = df.loc[df['lower_-1'] == True]
+    df_nan_gender = df.loc[df['gender_-1'] == True]
+
     df.loc[df_nan_upp.index, 'upper_1':'upper_11'] = -1
     df.loc[df_nan_low.index, 'lower_1':'lower_11'] = -1
+    df.loc[df_nan_gender.index, 'gender_0':'gender_1'] = -1
+
     print("\nsono qui\n")
-    df.drop(columns=['upper_-1', 'lower_-1'], inplace=True)
+    df.drop(columns=['upper_-1', 'lower_-1', 'gender_-1'], inplace=True)
 
     return df
 
+
 def conversion(filename, type="train"):
     df = pd.read_csv(filename, header=None, names=['filename', 'upper', 'lower', 'gender', 'bag', 'hat'])
-    #print(len(df.index))
-    #df.replace(-1, pd.NA, inplace=True)
-    #print("valori nulli", df.isnull().sum())
+
+    # print(len(df.index))
+    # df.replace(-1, pd.NA, inplace=True)
+    # print("valori nulli", df.isnull().sum())
+
     df['upper'] = df['upper'].astype('category')
     df['lower'] = df['lower'].astype('category')
+    df['gender'] = df['gender'].astype('category')
 
-    one_hot_encoded_color = pd.get_dummies(df, columns=['upper', 'lower'])
+    one_hot_encoded_color = pd.get_dummies(df, columns=['upper', 'lower', 'gender'])
     print(one_hot_encoded_color.head())
     one_hot_encoded_color = nan_index(one_hot_encoded_color) if type == "train" else one_hot_encoded_color
-    print(one_hot_encoded_color.head())
+
     one_hot_encoded_color.replace(True, 1, inplace=True)
     one_hot_encoded_color.replace(False, 0, inplace=True)
-
+    one_hot_encoded_color.replace(-1, 0, inplace=True)
+    print(one_hot_encoded_color.head())
     return one_hot_encoded_color
 
-def create_file_mat(dataframe):
+
+def create_file_mat(dataframe, name_columns):
     color = ["black", "blue", "brown", "gray", "green", "orange", "pink", "purple", "red", "white", "yellow"]
 
     up_color = ["up" + c for c in color]
     lower_color = ["lo" + c for c in color]
-    attributes = ["gender", "bag", "hat"] + up_color + lower_color
+    attributes = ["bag", "hat"] + up_color + lower_color + ["male", "female"]
 
     attributes = pd.DataFrame(attributes)
-    print("attributes",attributes)
-    attributes = np.array(attributes[0]).reshape(25,1)
+    print("attributes", attributes)
+    attributes = np.array(attributes[0]).reshape(len(attributes), 1)
 
-    train_label = np.array(dataframe[columns])
+    labels = np.array(dataframe[name_columns])
 
-    images_name = np.array(dataframe['filename']).reshape(1,len(dataframe))
+    images_name = np.array(dataframe['filename']).reshape(1, len(dataframe))
     images_name = images_name.transpose()
 
-    return attributes, train_label, images_name
+    return attributes, labels, images_name
 
-columns = ["gender", "bag", "hat"]
-for i in range(1, 12):
-    columns.append("upper_" + str(i))
 
-for i in range(1,12):
-    columns.append("lower_" + str(i))
+if __name__ == '__main__':
+    """
+    0 -> male
+    1 -> female
+    """
+    path = os.path.join(os.getcwd(), "creation_dataset")
 
-df_train = conversion("training_set.csv")
-attributes, train_label, images_name_train = create_file_mat(df_train)
-print(attributes.shape)
-print(train_label.shape)
-print(images_name_train.shape)
-df_validation = conversion("validation_set.csv", type="val")
+    df_train = conversion(f"{path}/training_set_fixed.csv")
 
-df_test = df_validation.sample(frac=0.3, random_state=200,)
-df_validation = df_validation.drop(df_test.index)
-_, val_label, images_name_val = create_file_mat(df_validation)
-print(val_label.shape)
-print(images_name_val.shape)
+    columns = df_train.columns[1:]
 
-_, test_label, images_name_test = create_file_mat(df_test)
-#print(attributes_val.shape)
-print(test_label.shape)
-print(images_name_test.shape)
+    attributes, train_label, images_name_train = create_file_mat(df_train, columns)
+    print(attributes.shape)
+    print(train_label.shape)
+    print(images_name_train.shape)
+    df_validation = conversion(f"{path}/validation_set.csv", type="val")
 
-data = {'attributes': attributes,
-       'test_images_name': images_name_test,
-       'test_label': test_label,
-       'train_images_name': images_name_train,
-       'train_label': train_label,
-       'val_images_name': images_name_val,
-       'val_label': val_label
-       }
+    df_test = df_validation.sample(frac=0.3, random_state=200)
+    df_validation = df_validation.drop(df_test.index)
+    _, val_label, images_name_val = create_file_mat(df_validation, columns)
+    print(val_label.shape)
+    print(images_name_val.shape)
 
-outfile = "annotation_prova.mat"
-scipy.io.savemat(outfile, data)
+    _, test_label, images_name_test = create_file_mat(df_test, columns)
+    # print(attributes_val.shape)
+    print(test_label.shape)
+    print(images_name_test.shape)
+
+    data = {'attributes': attributes,
+            'test_images_name': images_name_test,
+            'test_label': test_label,
+            'train_images_name': images_name_train,
+            'train_label': train_label,
+            'val_images_name': images_name_val,
+            'val_label': val_label
+            }
+
+    outfile = os.path.join(path, "annotation_fixed_prova.mat")
+    scipy.io.savemat(outfile, data)
