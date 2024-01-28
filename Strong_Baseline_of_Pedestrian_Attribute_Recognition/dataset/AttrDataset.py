@@ -74,3 +74,11 @@ def get_transform(args):
         T.ToTensor(),
         normalize,
     ])
+
+    valid_transform = T.Compose([
+        T.Resize((height, width)),
+        T.ToTensor(),
+        normalize
+    ])
+
+    return train_transform, valid_transform
