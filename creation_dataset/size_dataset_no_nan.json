@@ -1,0 +1,30 @@
+{
+    "attributes": [
+        26,
+        1
+    ],
+    "test_images_name": [
+        2449,
+        1
+    ],
+    "test_label": [
+        2449,
+        26
+    ],
+    "train_images_name": [
+        30075,
+        1
+    ],
+    "train_label": [
+        30075,
+        26
+    ],
+    "val_images_name": [
+        5713,
+        1
+    ],
+    "val_label": [
+        5713,
+        26
+    ]
+}

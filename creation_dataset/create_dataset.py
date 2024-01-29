@@ -135,15 +135,16 @@ if __name__ == '__main__':
     }
     json_file = f"{path}/size_dataset.json"
 
-    with open(json_file, 'w') as output:
-        json.dump(size_data, output, indent=4)
-
     output_file = ""
 
     if args.no_nan:
         outfile = os.path.join(path, "annotation_without_nan.mat")
+        json_file = f"{path}/size_dataset_no_nan.json"
     else:
         outfile = os.path.join(path, "annotation_fixed_values.mat")
+
+    with open(json_file, 'w') as output:
+        json.dump(size_data, output, indent=4)
 
     scipy.io.savemat(outfile, data)
 
