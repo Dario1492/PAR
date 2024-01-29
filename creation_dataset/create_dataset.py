@@ -3,7 +3,7 @@ import os
 import pandas as pd
 import numpy as np
 import scipy
-import json
+import json, argparse
 
 
 def nan_index(df):
@@ -21,12 +21,17 @@ def nan_index(df):
     return df
 
 
-def conversion(filename, type="train"):
+def conversion(filename, type="train", without_nan=False):
     df = pd.read_csv(filename, header=None, names=['filename', 'upper', 'lower', 'gender', 'bag', 'hat'])
 
     # print(len(df.index))
     # df.replace(-1, pd.NA, inplace=True)
     # print("valori nulli", df.isnull().sum())
+
+    if without_nan:
+        all_values = df.loc[(df['upper'] != -1) & (df['lower'] != -1) & (df['gender'] != -1) & (df['bag'] != -1) & (df['hat'] != -1)]
+        df = all_values.copy()
+        print("without nan")
 
     df['upper'] = df['upper'].astype('category')
     df['lower'] = df['lower'].astype('category')
@@ -34,11 +39,13 @@ def conversion(filename, type="train"):
 
     one_hot_encoded_color = pd.get_dummies(df, columns=['upper', 'lower', 'gender'])
     print(one_hot_encoded_color.head())
-    one_hot_encoded_color = nan_index(one_hot_encoded_color) if type == "train" else one_hot_encoded_color
+    one_hot_encoded_color = nan_index(one_hot_encoded_color) if without_nan is False and type=="train" else one_hot_encoded_color
 
     one_hot_encoded_color.replace(True, 1, inplace=True)
     one_hot_encoded_color.replace(False, 0, inplace=True)
-    one_hot_encoded_color.replace(-1, 0, inplace=True)
+
+    if without_nan is False and type=="train":
+        one_hot_encoded_color.replace(-1, 0, inplace=True)
     print(one_hot_encoded_color.head())
     return one_hot_encoded_color
 
@@ -67,17 +74,35 @@ if __name__ == '__main__':
     0 -> male
     1 -> female
     """
-    path = os.path.join(os.getcwd(), "creation_dataset")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--no_nan", default=False)
+    args = parser.parse_args()
 
-    df_train = conversion(f"{path}/training_set_fixed.csv")
+    path = os.path.join(os.getcwd(), "creation_dataset")
+    ### Training set
+    df_train = conversion(f"{path}/training_set_fixed.csv", without_nan=args.no_nan)
 
     columns = df_train.columns[1:]
 
+    print("\n\n",columns, "\n\n")
+
     attributes, train_label, images_name_train = create_file_mat(df_train, columns)
     print(attributes.shape)
-    print(train_label.shape)
+    print(train_label.shape, type(train_label))
     print(images_name_train.shape)
-    df_validation = conversion(f"{path}/validation_set.csv", type="val")
+
+    ### Validation  and Test
+    df_validation = conversion(f"{path}/validation_set.csv", type="val", without_nan=args.no_nan)
+
+    if args.no_nan:
+        ### added image to train
+        df_added_training = df_validation.sample(n = 4000, random_state=4000)
+        _, added_train_label, added_images_name_train = create_file_mat(df_added_training, columns)
+
+        train_label = np.concatenate((train_label, added_train_label), axis=0)
+        images_name_train = np.concatenate((images_name_train, added_images_name_train), axis=0)
+
+        df_validation = df_validation.drop(df_added_training.index)
 
     df_test = df_validation.sample(frac=0.3, random_state=200)
     df_validation = df_validation.drop(df_test.index)
@@ -113,5 +138,13 @@ if __name__ == '__main__':
     with open(json_file, 'w') as output:
         json.dump(size_data, output, indent=4)
 
-    outfile = os.path.join(path, "annotation_fixed_prova.mat")
+    output_file = ""
+
+    if args.no_nan:
+        outfile = os.path.join(path, "annotation_without_nan.mat")
+    else:
+        outfile = os.path.join(path, "annotation_fixed_values.mat")
+
     scipy.io.savemat(outfile, data)
+
+#%%
