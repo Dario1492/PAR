@@ -7,3 +7,5 @@ Strong_Baseline_of_Pedestrian_Attribute_Recognition/dataset/.DS_Store
 tracking/video/*
 PARFormer/dataloaders/dict_data_pa100k.pkl
 PARFormer/dataloaders/dict_data_peta.pkl
+Fashion_Trend_Analyzer/*
+Person-Attribute-Recognition-MarketDuke/*
