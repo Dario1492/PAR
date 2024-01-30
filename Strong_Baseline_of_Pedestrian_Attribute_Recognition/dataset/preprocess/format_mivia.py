@@ -26,7 +26,7 @@ def generate_data_description(save_dir, reorder):
     """
     create a dataset description file, which consists of images, labels
     """
-    mivia_data = loadmat(os.path.join(save_dir, 'annotation.mat')) #forse da cambiare annotation.mat
+    mivia_data = loadmat(os.path.join(save_dir, 'annotation_fixed_values.mat')) #forse da cambiare annotation.mat
     dataset = EasyDict()
     dataset.description = 'mivia'
     dataset.reorder = 'group_order' #forse non serve
@@ -47,7 +47,7 @@ def generate_data_description(save_dir, reorder):
    #     dataset.attr_name = [dataset.attr_name[i] for i in group_order]
 
     size_trainval = size_dataset['train_images_name'][0] + size_dataset['val_images_name'][0]
-    size_testval = size_dataset['test_images_name'][0] + size_dataset['test_images_name'][0]
+    size_testval = size_dataset['test_images_name'][0] + size_trainval
 
     dataset.partition = EasyDict()
     dataset.partition.train = np.arange(0, size_dataset['train_images_name'][0])  # np.array(range(80000))
