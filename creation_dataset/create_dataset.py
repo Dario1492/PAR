@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 import scipy
 import json, argparse
+import pickle
 
 
 def nan_index(df):
@@ -68,6 +69,24 @@ def create_file_mat(dataframe, name_columns):
 
     return attributes, labels, images_name
 
+def create_dict_data(dataframe):
+
+    dict_data_filename = pd.DataFrame(dataframe['filename'])
+    dict_data = dict()
+    for i in dict_data_filename['filename']:
+        dict_data[i] = (0, 'front')
+    
+    for i, key in enumerate(dict_data.keys()):
+
+        print(key, dict_data[key])
+        if i == 10:
+            break
+
+        i+=1
+
+    return dict_data
+    
+
 
 if __name__ == '__main__':
     """
@@ -76,76 +95,84 @@ if __name__ == '__main__':
     """
     parser = argparse.ArgumentParser()
     parser.add_argument("--no_nan", default=False)
+    parser.add_argument("--data", default=True)
     args = parser.parse_args()
+
 
     path = os.path.join(os.getcwd(), "creation_dataset")
     ### Training set
     df_train = conversion(f"{path}/training_set_fixed.csv", without_nan=args.no_nan)
 
-    columns = df_train.columns[1:]
+    if args.data:
+        dataset = create_dict_data(df_train)
+        with open(os.path.join(path, 'dict_data_mivia.pkl'), 'wb+') as f:
+            pickle.dump(dataset, f) 
+    # columns = df_train.columns[1:]
 
-    print("\n\n",columns, "\n\n")
+    # print("\n\n",columns, "\n\n")
 
-    attributes, train_label, images_name_train = create_file_mat(df_train, columns)
-    print(attributes.shape)
-    print(train_label.shape, type(train_label))
-    print(images_name_train.shape)
+    # attributes, train_label, images_name_train = create_file_mat(df_train, columns)
+    # print(attributes.shape)
+    # print(train_label.shape, type(train_label))
+    # print(images_name_train.shape)
 
-    ### Validation  and Test
-    df_validation = conversion(f"{path}/validation_set.csv", type="val", without_nan=args.no_nan)
+    # ### Validation  and Test
+    # df_validation = conversion(f"{path}/validation_set.csv", type="val", without_nan=args.no_nan)
 
-    if args.no_nan:
-        ### added image to train
-        df_added_training = df_validation.sample(n = 4000, random_state=4000)
-        _, added_train_label, added_images_name_train = create_file_mat(df_added_training, columns)
+    # if args.no_nan:
+    #     ### added image to train
+    #     df_added_training = df_validation.sample(n = 4000, random_state=4000)
+    #     _, added_train_label, added_images_name_train = create_file_mat(df_added_training, columns)
 
-        train_label = np.concatenate((train_label, added_train_label), axis=0)
-        images_name_train = np.concatenate((images_name_train, added_images_name_train), axis=0)
+    #     train_label = np.concatenate((train_label, added_train_label), axis=0)
+    #     images_name_train = np.concatenate((images_name_train, added_images_name_train), axis=0)
 
-        df_validation = df_validation.drop(df_added_training.index)
+    #     df_validation = df_validation.drop(df_added_training.index)
 
-    df_test = df_validation.sample(frac=0.3, random_state=200)
-    df_validation = df_validation.drop(df_test.index)
-    _, val_label, images_name_val = create_file_mat(df_validation, columns)
-    print(val_label.shape)
-    print(images_name_val.shape)
+    # df_test = df_validation.sample(frac=0.3, random_state=200)
+    # df_validation = df_validation.drop(df_test.index)
+    # _, val_label, images_name_val = create_file_mat(df_validation, columns)
+    # print(val_label.shape)
+    # print(images_name_val.shape)
 
-    _, test_label, images_name_test = create_file_mat(df_test, columns)
-    # print(attributes_val.shape)
-    print(test_label.shape)
-    print(images_name_test.shape)
+    # _, test_label, images_name_test = create_file_mat(df_test, columns)
+    # # print(attributes_val.shape)
+    # print(test_label.shape)
+    # print(images_name_test.shape)
 
-    data = {'attributes': attributes,
-            'test_images_name': images_name_test,
-            'test_label': test_label,
-            'train_images_name': images_name_train,
-            'train_label': train_label,
-            'val_images_name': images_name_val,
-            'val_label': val_label
-            }
+    # data = {'attributes': attributes,
+    #         'test_images_name': images_name_test,
+    #         'test_label': test_label,
+    #         'train_images_name': images_name_train,
+    #         'train_label': train_label,
+    #         'val_images_name': images_name_val,
+    #         'val_label': val_label
+    #         }
 
-    size_data = {
-        'attributes': attributes.shape,
-        'test_images_name': images_name_test.shape,
-        'test_label': test_label.shape,
-        'train_images_name': images_name_train.shape,
-        'train_label': train_label.shape,
-        'val_images_name': images_name_val.shape,
-        'val_label': val_label.shape
-    }
-    json_file = f"{path}/size_dataset.json"
+    # size_data = {
+    #     'attributes': attributes.shape,
+    #     'test_images_name': images_name_test.shape,
+    #     'test_label': test_label.shape,
+    #     'train_images_name': images_name_train.shape,
+    #     'train_label': train_label.shape,
+    #     'val_images_name': images_name_val.shape,
+    #     'val_label': val_label.shape
+    # }
+    # json_file = f"{path}/size_dataset.json"
 
-    output_file = ""
+    # output_file = ""
 
-    if args.no_nan:
-        outfile = os.path.join(path, "annotation_without_nan.mat")
-        json_file = f"{path}/size_dataset_no_nan.json"
-    else:
-        outfile = os.path.join(path, "annotation_fixed_values.mat")
+    # if args.csv:
+    #     outfile = os.path.join(path, "")
 
-    with open(json_file, 'w') as output:
-        json.dump(size_data, output, indent=4)
+    # if args.no_nan:
+    #     outfile = os.path.join(path, "annotation_without_nan.mat")
+    #     json_file = f"{path}/size_dataset_no_nan.json"
+    # else:
+    #     outfile = os.path.join(path, "annotation_fixed_values.mat")
 
-    scipy.io.savemat(outfile, data)
+    # with open(json_file, 'w') as output:
+    #     json.dump(size_data, output, indent=4)
 
-#%%
+    # scipy.io.savemat(outfile, data)
+
